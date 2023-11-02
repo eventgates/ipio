@@ -1,16 +1,14 @@
-# ADAM 6050-D REST API Implementation
+# IPIO Python Library
 <!--
 [![Documentation Status](https://readthedocs.org/projects/adam-io/badge/?version=latest)](https://adam-io.readthedocs.io/en/latest/?badge=latest)
 ![Tests](https://github.com/eventgates/adam_io/workflows/Tests/badge.svg)
 [![Publish](https://github.com/eventgates/adam_io/workflows/Publish/badge.svg)](https://pypi.org/project/adam-io/)
 
-![image](https://advdownload.advantech.com/productfile/PIS/ADAM-6050/Product%20-%20Photo(B)/ADAM-6050_01_B20190725160245.jpg)
-
-[ADAM 6000-Series Manual](http://advdownload.advantech.com/productfile/Downloadfile4/1-1M99LTH/ADAM-6000_User_Manaul_Ed_9.pdf)
-
-6050-D has 12 digital inputs and 6 digital outputs. It can be controlled with http requests. The aim of this repo is to wrap the ADAM API into a convenience module for Event Gates' deep learning platform VIS.
-
 -->
+![image](https://github.com/eventgates/ipio/blob/master/ipio.jpg?raw=true)
+
+IPIO has 8 digital outputs and 4 digital inputs
+
 # Installation
 ```
 pip install ipio

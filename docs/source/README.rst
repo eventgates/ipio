@@ -1,7 +1,7 @@
 IPIO Python Library
 +++++++++++++++++++++++++++++++++++
 
-.. image:: https://advdownload.advantech.com/productfile/PIS/ADAM-6050/Product%20-%20Photo(B)/ADAM-6050_01_B20190725160245.jpg
+.. image:: https://github.com/eventgates/ipio/blob/master/ipio.jpg?raw=true
 
 IPIO has 8 digital inputs and 4 digital outputs. 
 

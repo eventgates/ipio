@@ -1,7 +1,7 @@
 ADAM 6050-D REST API Implementation
 =======================================================
 
-.. image:: https://advdownload.advantech.com/productfile/PIS/ADAM-6050/Product%20-%20Photo(B)/ADAM-6050_01_B20190725160245.jpg
+.. image:: https://github.com/eventgates/ipio/blob/master/ipio.jpg?raw=true
 
 
 This documentation contains information on how to use this module along with some examples.
@@ -14,7 +14,7 @@ Install with pip, requires python3.6>=
 
 .. code-block:: 
 
-    pip install adam-io
+    pip install ipio
 
 .. toctree::
     :caption: Contents:
@@ -30,5 +30,5 @@ Install with pip, requires python3.6>=
     :titlesonly:
 
     EventGates <https://eventgates.com>
-    GitHub <https://github.com/eventgates/adam_io.git>
-    PyPi <https://pypi.org/project/adam-io/>
+    GitHub <https://github.com/eventgates/ipio.git>
+    PyPi <https://pypi.org/project/ipio/>
