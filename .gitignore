@@ -2,3 +2,5 @@
 test.py
 __pycache__/
 test/__pycache__/
+dist/
+ipio.egg-info
