@@ -253,7 +253,6 @@ class IPIO:
         msg: str = f"<{ApiMethod.SET_OUTPUT};{pin},{val}>"
         response: str = IPIO._send_message(self.sock, msg)
         method, params = IPIO._parse_response(response)
-        print(method)
         if method != ApiMethod.SET_OUTPUT:
             raise MutedSystemException(
                 f"System is muted, could not set output DO{pin} to {val}"
@@ -696,7 +695,7 @@ class IPIO:
         return params[-1]
 
     def signal_handler(self, sig, frame):
-        self.monitor(0)
+        self.monitor(0, None)
         self.close()
         exit(0)
 
