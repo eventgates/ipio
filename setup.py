@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="ipio",
-    version="1.2220.1443",
+    version="1.2242.1440",
     author="Kemal Çelikel",
     author_email="kcelikel@eventgates.com",
     description="IPIO Python Library",
