@@ -20,3 +20,4 @@ class ApiMethod:
     SET_DATETIME = "set_datetime"
     GET_DATETIME = "get_datetime"
     GET_MAC = "get_mac"
+    GENERATE_MAC = "generate_mac"

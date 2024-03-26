@@ -4,7 +4,7 @@ import re
 import signal
 import socket
 from time import sleep
-from typing import Union, Tuple, List, Callable
+from typing import Callable, List, Tuple, Union
 
 from .api_method import ApiMethod
 from .config_field import ConfigField
@@ -349,6 +349,16 @@ class IPIO:
         :return: return the MAC address
         """
         msg: str = f"<{ApiMethod.GET_MAC}>"
+        response: str = IPIO._send_message(self.sock, msg)
+        _, params = IPIO._parse_response(response)
+        mac: str = params[0]
+        return mac
+
+    def generate_mac(self) -> str:
+        """
+        :return: generate a mac address
+        """
+        msg: str = f"<{ApiMethod.GENERATE_MAC}>"
         response: str = IPIO._send_message(self.sock, msg)
         _, params = IPIO._parse_response(response)
         mac: str = params[0]
