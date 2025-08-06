@@ -40,10 +40,7 @@ class IPIO:
     @staticmethod
     def _validate_ip_only(ip_address: str) -> bool:
         """Validates IP address without netmask."""
-        regex = (
-            r"^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0)\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|["
-            r"1-9][0-9]?|0)$ "
-        )
+        regex = r"^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0)\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0)$"
         return bool(re.match(regex, ip_address))
 
     def _connect(self) -> socket.socket:
