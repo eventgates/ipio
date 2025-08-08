@@ -12,9 +12,12 @@
 #
 import os
 import sys
-import re
+
+# import re
+import importlib.metadata
 
 sys.path.insert(0, os.path.abspath("../../"))
+
 
 # -- Project information -----------------------------------------------------
 
@@ -23,8 +26,11 @@ copyright = "2023, Event Gates"
 author = "Kemal Çelikel"
 
 
-with open("../../version.py", "r") as f:
-    version = re.search("'(\d+.?)*'", f.read()).group()
+#  with open("../../version.py", "r") as f:
+#      version = re.search("'(\d+.?)*'", f.read()).group()
+# Get version from your installed package
+release = importlib.metadata.version("ipio")
+version = ".".join(release.split(".")[:2])  # or keep full version if preferred
 
 # The full version, including alpha/beta/rc tags
 release = version
