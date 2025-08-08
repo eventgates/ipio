@@ -12,5 +12,5 @@ python:
     - requirements: docs/requirements.txt  # Optional: if you have doc-specific deps
 
 sphinx:
-  configuration: docs/conf.py
+  configuration: docs/source/conf.py
 
