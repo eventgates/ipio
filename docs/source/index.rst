@@ -1,4 +1,4 @@
-ADAM 6050-D REST API Implementation
+IPIO Library Implementation
 =======================================================
 
 .. image:: https://github.com/eventgates/ipio/blob/master/ipio.jpg?raw=true
