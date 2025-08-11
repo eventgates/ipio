@@ -11,6 +11,9 @@ from .config_field import ConfigField
 from .device import Device
 from .exceptions import *
 
+# Get library-specific logger to prevent duplication
+_logger = logging.getLogger('ipio')
+
 
 class IPIO:
     MAX_MESSAGE_SIZE: int = 1023
@@ -28,7 +31,7 @@ class IPIO:
             # for the command line/console application
             signal.signal(signal.SIGINT, self.signal_handler)
         except ValueError as e:
-            logging.info("Signal is only for the CLI usage", e)
+            _logger.info(f"Signal is only for CLI usage: {e}")
 
         self.ip: str = ip
         self.username: str = username
@@ -93,12 +96,12 @@ class IPIO:
                 sock.connect((ip, port))
                 return sock
             except ConnectionRefusedError as e:
-                logging.warning(
-                    f"{e}: Too soon for another connection. Trying again... {trial_count}",
+                _logger.warning(
+                    f"{e}: Too soon for another connection. Trying again... {trial_count}"
                 )
                 sleep(0.1)
             except socket.timeout as e:
-                logging.warning(f"{e}: Socket connection timedout")
+                _logger.warning(f"{e}: Socket connection timedout")
                 sock.close()
                 raise socket.timeout(e)
             finally:
@@ -728,7 +731,7 @@ class IPIO:
 
         while val == 1:
             single_response = self.sock.recv(1024).decode("latin-1")
-            logging.info(single_response)
+            _logger.info(single_response)
             printer_function(single_response)
             if single_response == f"<{ApiMethod.GET_LOG}>":
                 break
@@ -790,21 +793,21 @@ class IPIO:
         crc = crc32mpeg2(file_in_chunks)
 
         response = IPIO._send_message(self.sock, "<update>")
-        logging.info(f"[Update Progress: Initiated]: {response}")
+        _logger.info(f"[Update Progress: Initiated]: {response}")
 
         response = IPIO._send_message(self.sock, str(file_size))
-        logging.info(f"[Update Progress: Size Sent]: {response}")
+        _logger.info(f"[Update Progress: Size Sent]: {response}")
 
         for fic in file_in_chunks:
             self.sock.sendall(fic)
             response = self.sock.recv(1024).decode("utf-8")
-            logging.info(f"[Update Progress: Sending File...]: {response}")
+            _logger.info(f"[Update Progress: Sending File...]: {response}")
         response = self.sock.recv(1024).decode("utf-8")
-        logging.info(f"[Update Progress: File Sent]: {response}")
+        _logger.info(f"[Update Progress: File Sent]: {response}")
         response = IPIO._send_message(self.sock, str(crc))
-        logging.info(f"[Update Progress: CRC Check]: {response}")
+        _logger.info(f"[Update Progress: CRC Check]: {response}")
         response = self.sock.recv(1024).decode("utf-8")
-        logging.info(f"[Update Progress: Completed]: {response}")
+        _logger.info(f"[Update Progress: Completed]: {response}")
 
     def close(self) -> None:
         """
