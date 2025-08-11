@@ -9,10 +9,22 @@ from typing import Callable, List, Tuple, Union
 from .api_method import ApiMethod
 from .config_field import ConfigField
 from .device import Device
-from .exceptions import *
+from .exceptions import (
+    AuthenticationException,
+    AuthorizationException,
+    CommunicationException,
+    ConfigNotSetException,
+    InvalidIPException,
+    EmptyParamsException,
+    MessageSizeException,
+    MutedSystemException,
+    SetDatetimeException,
+    UnusableSocketException,
+)
+
 
 # Get library-specific logger to prevent duplication
-_logger = logging.getLogger('ipio')
+_logger = logging.getLogger("ipio")
 
 
 class IPIO:
@@ -43,7 +55,7 @@ class IPIO:
     @staticmethod
     def _validate_ip_only(ip_address: str) -> bool:
         """Validates IP address without netmask."""
-        regex = r"^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0)\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0)$"
+        regex = r"^((25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$"
         return bool(re.match(regex, ip_address))
 
     def _connect(self) -> socket.socket:
@@ -245,9 +257,7 @@ class IPIO:
         response: str = IPIO._send_message(self.sock, msg)
         method, params = IPIO._parse_response(response)
         if method != ApiMethod.GET_OUTPUT_BULK:
-            raise MutedSystemException(
-                f"System is muted, could not get outputs as bulk"
-            )
+            raise MutedSystemException("System is muted, could not get outputs as bulk")
         return params[0]
 
     def set_output(self, pin: int, val: int) -> List[str]:
@@ -424,7 +434,8 @@ class IPIO:
 
     def set_recovery_preset(self, preset: str = "33333310") -> None:
         """
-        :param preset: default preset doesn't change the pins lights the yellow indicator and turns off the red
+        :param preset: default preset doesn't change the pins lights the yellow
+        indicator and turns off the red
         """
         response: str = self.set_config(ConfigField.RECOVERY_PRESET, preset)
         method, params = IPIO._parse_response(response)
@@ -444,7 +455,8 @@ class IPIO:
 
     def set_emergency_preset(self, preset: str = "00000002") -> None:
         """
-        :param preset: default preset assumes all pins set to unsafe positions, yellow light turned off and red light blinks
+        :param preset: default preset assumes all pins set to unsafe positions,
+        yellow light turned off and red light blinks
         """
         response: str = self.set_config(ConfigField.EMERGENCY_PRESET, preset)
         method, params = IPIO._parse_response(response)
@@ -464,7 +476,8 @@ class IPIO:
 
     def set_mute_preset(self, preset: str = "11111101") -> None:
         """
-        :param preset: default preset assumes all pins set to safe positions, yellow light turned off and red light turned on
+        :param preset: default preset assumes all pins set to safe positions,
+        yellow light turned off and red light turned on
         """
         response: str = self.set_config(ConfigField.MUTE_PRESET, preset)
         method, params = IPIO._parse_response(response)

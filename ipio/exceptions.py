@@ -36,4 +36,5 @@ class AuthorizationException(Exception):
 
 class CommunicationException(Exception):
     """Base class for communication-related errors"""
+
     pass
