@@ -222,9 +222,15 @@ class IPIO:
         response: str = IPIO._send_message(self.sock, msg)
         method, params = IPIO._parse_response(response)
         if method != ApiMethod.SET_OUTPUT_BULK:
-            raise MutedSystemException(
-                f"System is muted, could not set outputs to {output_string}"
-            )
+            # Check if this is actually a mute condition or just a communication error
+            if method == "error" and len(params) > 0 and "muted" in params[0].lower():
+                raise MutedSystemException(
+                    f"System is muted, could not set outputs to {output_string}"
+                )
+            else:
+                raise CommunicationException(
+                    f"Unexpected response: expected {ApiMethod.SET_OUTPUT_BULK}, got {method}"
+                )
         return params[0]
 
     def get_output_as_bulk(self) -> str:
@@ -251,9 +257,15 @@ class IPIO:
         response: str = IPIO._send_message(self.sock, msg)
         method, params = IPIO._parse_response(response)
         if method != ApiMethod.SET_OUTPUT:
-            raise MutedSystemException(
-                f"System is muted, could not set output DO{pin} to {val}"
-            )
+            # Check if this is actually a mute condition or just a communication error
+            if method == "error" and len(params) > 0 and "muted" in params[0].lower():
+                raise MutedSystemException(
+                    f"System is muted, could not set output DO{pin} to {val}"
+                )
+            else:
+                raise CommunicationException(
+                    f"Unexpected response: expected {ApiMethod.SET_OUTPUT}, got {method}"
+                )
         return params
 
     def set_led(self, pin: int, val: int) -> List[str]:
