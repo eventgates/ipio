@@ -12,14 +12,19 @@ from .device import Device
 from .exceptions import (
     AuthenticationException,
     AuthorizationException,
+    CommunicationException,
     ConfigNotSetException,
-    EmptyParamsException,
     InvalidIPException,
+    EmptyParamsException,
     MessageSizeException,
     MutedSystemException,
     SetDatetimeException,
     UnusableSocketException,
 )
+
+
+# Get library-specific logger to prevent duplication
+_logger = logging.getLogger("ipio")
 
 
 class IPIO:
@@ -38,7 +43,7 @@ class IPIO:
             # for the command line/console application
             signal.signal(signal.SIGINT, self.signal_handler)
         except ValueError as e:
-            logging.info("Signal is only for the CLI usage", e)
+            _logger.info(f"Signal is only for CLI usage: {e}")
 
         self.ip: str = ip
         self.username: str = username
@@ -103,12 +108,12 @@ class IPIO:
                 sock.connect((ip, port))
                 return sock
             except ConnectionRefusedError as e:
-                logging.warning(
-                    f"{e}: Too soon for another connection. Trying again... {trial_count}",
+                _logger.warning(
+                    f"{e}: Too soon for another connection. Trying again... {trial_count}"
                 )
                 sleep(0.1)
             except socket.timeout as e:
-                logging.warning(f"{e}: Socket connection timedout")
+                _logger.warning(f"{e}: Socket connection timedout")
                 sock.close()
                 raise socket.timeout(e)
             finally:
@@ -232,9 +237,15 @@ class IPIO:
         response: str = IPIO._send_message(self.sock, msg)
         method, params = IPIO._parse_response(response)
         if method != ApiMethod.SET_OUTPUT_BULK:
-            raise MutedSystemException(
-                f"System is muted, could not set outputs to {output_string}"
-            )
+            # Check if this is actually a mute condition or just a communication error
+            if method == "error" and len(params) > 0 and "muted" in params[0].lower():
+                raise MutedSystemException(
+                    f"System is muted, could not set outputs to {output_string}"
+                )
+            else:
+                raise CommunicationException(
+                    f"Unexpected response: expected {ApiMethod.SET_OUTPUT_BULK}, got {method}"
+                )
         return params[0]
 
     def get_output_as_bulk(self) -> str:
@@ -259,9 +270,15 @@ class IPIO:
         response: str = IPIO._send_message(self.sock, msg)
         method, params = IPIO._parse_response(response)
         if method != ApiMethod.SET_OUTPUT:
-            raise MutedSystemException(
-                f"System is muted, could not set output DO{pin} to {val}"
-            )
+            # Check if this is actually a mute condition or just a communication error
+            if method == "error" and len(params) > 0 and "muted" in params[0].lower():
+                raise MutedSystemException(
+                    f"System is muted, could not set output DO{pin} to {val}"
+                )
+            else:
+                raise CommunicationException(
+                    f"Unexpected response: expected {ApiMethod.SET_OUTPUT}, got {method}"
+                )
         return params
 
     def set_led(self, pin: int, val: int) -> List[str]:
@@ -438,8 +455,8 @@ class IPIO:
 
     def set_emergency_preset(self, preset: str = "00000002") -> None:
         """
-        :param preset: default preset assumes all pins set to unsafe positions, yellow
-        light turned off and red light blinks
+        :param preset: default preset assumes all pins set to unsafe positions,
+        yellow light turned off and red light blinks
         """
         response: str = self.set_config(ConfigField.EMERGENCY_PRESET, preset)
         method, params = IPIO._parse_response(response)
@@ -459,8 +476,8 @@ class IPIO:
 
     def set_mute_preset(self, preset: str = "11111101") -> None:
         """
-        :param preset: default preset assumes all pins set to safe positions, yellow
-        light turned off and red light turned on
+        :param preset: default preset assumes all pins set to safe positions,
+        yellow light turned off and red light turned on
         """
         response: str = self.set_config(ConfigField.MUTE_PRESET, preset)
         method, params = IPIO._parse_response(response)
@@ -727,7 +744,7 @@ class IPIO:
 
         while val == 1:
             single_response = self.sock.recv(1024).decode("latin-1")
-            logging.info(single_response)
+            _logger.info(single_response)
             printer_function(single_response)
             if single_response == f"<{ApiMethod.GET_LOG}>":
                 break
@@ -789,21 +806,21 @@ class IPIO:
         crc = crc32mpeg2(file_in_chunks)
 
         response = IPIO._send_message(self.sock, "<update>")
-        logging.info(f"[Update Progress: Initiated]: {response}")
+        _logger.info(f"[Update Progress: Initiated]: {response}")
 
         response = IPIO._send_message(self.sock, str(file_size))
-        logging.info(f"[Update Progress: Size Sent]: {response}")
+        _logger.info(f"[Update Progress: Size Sent]: {response}")
 
         for fic in file_in_chunks:
             self.sock.sendall(fic)
             response = self.sock.recv(1024).decode("utf-8")
-            logging.info(f"[Update Progress: Sending File...]: {response}")
+            _logger.info(f"[Update Progress: Sending File...]: {response}")
         response = self.sock.recv(1024).decode("utf-8")
-        logging.info(f"[Update Progress: File Sent]: {response}")
+        _logger.info(f"[Update Progress: File Sent]: {response}")
         response = IPIO._send_message(self.sock, str(crc))
-        logging.info(f"[Update Progress: CRC Check]: {response}")
+        _logger.info(f"[Update Progress: CRC Check]: {response}")
         response = self.sock.recv(1024).decode("utf-8")
-        logging.info(f"[Update Progress: Completed]: {response}")
+        _logger.info(f"[Update Progress: Completed]: {response}")
 
     def close(self) -> None:
         """

@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="ipio",
-    version="1.2863.1358",
+    version="26.2876.2308",
     author="Kemal Çelikel",
     author_email="kcelikel@eventgates.com",
     description="IPIO Python Library",
@@ -18,5 +18,5 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.8",
 )
