@@ -782,7 +782,7 @@ class IPIO:
         msg: str = f"<{ApiMethod.RESET};{device}>"
         IPIO._send_message(self.sock, msg, wait_for_response=False)
 
-    def update(self, file_name: str) -> None:
+    def update(self, file_name: str) -> bool:
         def crc32mpeg2(chunks, crc=0xFFFFFFFF):
             for buf in chunks:
                 for val in buf:
@@ -805,22 +805,27 @@ class IPIO:
 
         crc = crc32mpeg2(file_in_chunks)
 
-        response = IPIO._send_message(self.sock, "<update>")
-        _logger.info(f"[Update Progress: Initiated]: {response}")
+        try:
+            response = IPIO._send_message(self.sock, "<update>")
+            _logger.info(f"[Update Progress: Initiated]: {response}")
 
-        response = IPIO._send_message(self.sock, str(file_size))
-        _logger.info(f"[Update Progress: Size Sent]: {response}")
+            response = IPIO._send_message(self.sock, str(file_size))
+            _logger.info(f"[Update Progress: Size Sent]: {response}")
 
-        for fic in file_in_chunks:
-            self.sock.sendall(fic)
+            for fic in file_in_chunks:
+                self.sock.sendall(fic)
+                response = self.sock.recv(1024).decode("utf-8")
+                _logger.info(f"[Update Progress: Sending File...]: {response}")
             response = self.sock.recv(1024).decode("utf-8")
-            _logger.info(f"[Update Progress: Sending File...]: {response}")
-        response = self.sock.recv(1024).decode("utf-8")
-        _logger.info(f"[Update Progress: File Sent]: {response}")
-        response = IPIO._send_message(self.sock, str(crc))
-        _logger.info(f"[Update Progress: CRC Check]: {response}")
-        response = self.sock.recv(1024).decode("utf-8")
-        _logger.info(f"[Update Progress: Completed]: {response}")
+            _logger.info(f"[Update Progress: File Sent]: {response}")
+            response = IPIO._send_message(self.sock, str(crc), wait_for_response=False)
+            _logger.info("[Update Progress: Completed]")
+            return True
+        except socket.timeout:
+            _logger.info(
+                "[Update Progress: Interrupted by socket.timeout, try again...]"
+            )
+            return False
 
     def close(self) -> None:
         """
