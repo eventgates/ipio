@@ -1,12 +1,11 @@
 import setuptools
-from version import __version__
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="ipio",
-    version=__version__,
+    version="1.2889.1102",
     author="Kemal Çelikel",
     author_email="kcelikel@eventgates.com",
     description="IPIO Python Library",
