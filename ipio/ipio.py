@@ -9,19 +9,12 @@ from typing import Callable, List, Tuple, Union
 from .api_method import ApiMethod
 from .config_field import ConfigField
 from .device import Device
-from .exceptions import (
-    AuthenticationException,
-    AuthorizationException,
-    CommunicationException,
-    ConfigNotSetException,
-    InvalidIPException,
-    EmptyParamsException,
-    MessageSizeException,
-    MutedSystemException,
-    SetDatetimeException,
-    UnusableSocketException,
-)
-
+from .exceptions import (AuthenticationException, AuthorizationException,
+                         CommunicationException, ConfigNotSetException,
+                         EmptyParamsException, InvalidIPException,
+                         InvalidOutputStringException, MessageSizeException,
+                         MutedSystemException, SetDatetimeException,
+                         UnusableSocketException)
 
 # Get library-specific logger to prevent duplication
 _logger = logging.getLogger("ipio")
@@ -69,21 +62,22 @@ class IPIO:
             self.ip, self.application_port
         )
 
-        params: List[str] = IPIO._authenticate(
-            accept_sock, self.username, self.password
-        )
+        try:
+            params: List[str] = IPIO._authenticate(
+                accept_sock, self.username, self.password
+            )
 
-        if not params:
-            raise EmptyParamsException("Empty params during login...")
+            if not params:
+                raise EmptyParamsException("Empty params during login...")
 
-        port: int = int(params[2])
-        token: str = params[3]
-        sock, authorize_params = IPIO._authorize(self.ip, port, token)
-        # immediately close the acceptance socket as well
-        accept_sock.close()
+            port: int = int(params[2])
+            token: str = params[3]
+            sock, authorize_params = IPIO._authorize(self.ip, port, token)
 
-        if not sock:
-            raise UnusableSocketException("Unusable socket during login...")
+            if not sock:
+                raise UnusableSocketException("Unusable socket during login...")
+        finally:
+            accept_sock.close()
 
         return sock
 
@@ -138,6 +132,8 @@ class IPIO:
             raise MessageSizeException(
                 f"Single message cannot be larger than {IPIO.MAX_MESSAGE_SIZE}"
             )
+        if len(byte_msg) == 0:
+            raise MessageSizeException(f"Message cannot be empty")
         sock.sendall(byte_msg)
         response: str = ""
         if wait_for_response:
@@ -233,19 +229,19 @@ class IPIO:
         :param output_string: 8 char string
         :return: return the parameters in the form of 8 char string
         """
+        if not isinstance(output_string, str):
+            raise TypeError(f"Expected str, got {type(output_string).__name__}")
+        if len(output_string) != 8 or not all(c in "0123" for c in output_string):
+            raise InvalidOutputStringException(
+                f"String must be exactly 8 characters containing only 0-3, got: {output_string!r}"
+            )
         msg: str = f"<{ApiMethod.SET_OUTPUT_BULK};{output_string}>"
         response: str = IPIO._send_message(self.sock, msg)
         method, params = IPIO._parse_response(response)
         if method != ApiMethod.SET_OUTPUT_BULK:
-            # Check if this is actually a mute condition or just a communication error
-            if method == "error" and len(params) > 0 and "muted" in params[0].lower():
-                raise MutedSystemException(
-                    f"System is muted, could not set outputs to {output_string}"
-                )
-            else:
-                raise CommunicationException(
-                    f"Unexpected response: expected {ApiMethod.SET_OUTPUT_BULK}, got {method}"
-                )
+            raise CommunicationException(
+                f"Unexpected response: expected {ApiMethod.SET_OUTPUT_BULK}, got {method}"
+            )
         return params[0]
 
     def get_output_as_bulk(self) -> str:
@@ -257,7 +253,9 @@ class IPIO:
         response: str = IPIO._send_message(self.sock, msg)
         method, params = IPIO._parse_response(response)
         if method != ApiMethod.GET_OUTPUT_BULK:
-            raise MutedSystemException("System is muted, could not get outputs as bulk")
+            raise CommunicationException(
+                f"Unexpected response: expected {ApiMethod.GET_OUTPUT_BULK}, got {method}"
+            )
         return params[0]
 
     def set_output(self, pin: int, val: int) -> List[str]:
@@ -270,15 +268,9 @@ class IPIO:
         response: str = IPIO._send_message(self.sock, msg)
         method, params = IPIO._parse_response(response)
         if method != ApiMethod.SET_OUTPUT:
-            # Check if this is actually a mute condition or just a communication error
-            if method == "error" and len(params) > 0 and "muted" in params[0].lower():
-                raise MutedSystemException(
-                    f"System is muted, could not set output DO{pin} to {val}"
-                )
-            else:
-                raise CommunicationException(
-                    f"Unexpected response: expected {ApiMethod.SET_OUTPUT}, got {method}"
-                )
+            raise CommunicationException(
+                f"Unexpected response: expected {ApiMethod.SET_OUTPUT}, got {method}"
+            )
         return params
 
     def set_led(self, pin: int, val: int) -> List[str]:
@@ -309,6 +301,10 @@ class IPIO:
         msg: str = f"<{ApiMethod.GET_OUTPUT};{pin}>"
         response: str = IPIO._send_message(self.sock, msg)
         method, params = IPIO._parse_response(response)
+        if method != ApiMethod.GET_OUTPUT:
+            raise CommunicationException(
+                f"Unexpected response: expected {ApiMethod.GET_OUTPUT}, got {method}"
+            )
         return params
 
     def get_input(self, pin: int) -> List[str]:
@@ -317,6 +313,10 @@ class IPIO:
         :return: return the state of output as <get_output;1,0>
                  which would mean relay 1 is OFF
         """
+        if not isinstance(pin, int):
+            raise TypeError(f"Expected int, got {type(pin).__name__}")
+        if pin not in [1, 2, 3, 4]:
+            raise IndexError("Only 1,2,3,4 allowed")
         msg: str = f"<{ApiMethod.GET_INPUT};{pin}>"
         response: str = IPIO._send_message(self.sock, msg)
         method, params = IPIO._parse_response(response)

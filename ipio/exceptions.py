@@ -34,6 +34,10 @@ class AuthorizationException(Exception):
     pass
 
 
+class InvalidOutputStringException(Exception):
+    pass
+
+
 class CommunicationException(Exception):
     """Base class for communication-related errors"""
 
